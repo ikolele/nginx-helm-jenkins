@@ -24,12 +24,7 @@ pipeline {
 
     stage('Deploy with Helm') {
       steps {
-        sh """
-          helm upgrade --install ${RELEASE} charts \
-            --set image.repository=${IMAGE_NAME} \
-            --set image.tag=${IMAGE_TAG} \
-            --namespace ${NAMESPACE}
-        """
+        sh "helm upgrade --install ${RELEASE} charts --set image.repository=${IMAGE_NAME} --set image.tag=${IMAGE_TAG} --namespace ${NAMESPACE}"
       }
     }
 
