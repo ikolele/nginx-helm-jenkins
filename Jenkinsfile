@@ -37,7 +37,12 @@ pipeline {
 
   post {
     failure {
-      sh "helm rollback ${RELEASE}"
-    }
+      sh """
+      if helm status ${RELEASE} >/dev/null 2>&1; then
+        helm rollback ${RELEASE}
+      else
+        echo "No Helm release to roll back"
+      fi
+    """
   }
 }
