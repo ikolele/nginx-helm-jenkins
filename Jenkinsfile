@@ -1,38 +1,32 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    IMAGE_NAME = "nginx-demo"
-    IMAGE_TAG  = "${BUILD_NUMBER}"
-    RELEASE    = "nginx"
-    NAMESPACE  = "default"
-  }
-
-  stages {
-
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
+    environment {
+        KUBECONFIG = "/home/jenkins/.kube/config"
     }
 
-    stage('Build Docker Image') {
-      steps {
-        sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
-      }
-    }
+    stages {
 
-    stage('Deploy with Helm') {
-      steps {
-        sh 'helm upgrade --install ${RELEASE} charts --set image.repository=${IMAGE_NAME} --set image.tag=${IMAGE_TAG} --namespace ${NAMESPACE}'
-      }
-    }
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t nginx-demo:13 .'
+            }
+        }
 
-    stage('Verify Rollout') {
-      steps {
-        sh 'kubectl rollout status deployment/${RELEASE} -n ${NAMESPACE}'
-      }
+        stage('Deploy with Helm') {
+            steps {
+                sh '''
+                    kubectl config get-contexts
+                    kubectl config use-context dev
+
+                    helm upgrade --install nginx charts \
+                      --set image.repository=nginx-demo \
+                      --set image.tag=13 \
+                      --namespace default
+                '''
+            }
+        }
     }
-  }
 }
+
 
