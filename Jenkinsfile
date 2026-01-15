@@ -18,21 +18,21 @@ pipeline {
 
     stage('Build Docker Image') {
       steps {
-        sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+        sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
       }
     }
 
     stage('Deploy with Helm') {
       steps {
-        sh "helm upgrade --install ${RELEASE} charts --set image.repository=${IMAGE_NAME} --set image.tag=${IMAGE_TAG} --namespace ${NAMESPACE}"
+        sh 'helm upgrade --install ${RELEASE} charts --set image.repository=${IMAGE_NAME} --set image.tag=${IMAGE_TAG} --namespace ${NAMESPACE}'
       }
     }
 
     stage('Verify Rollout') {
       steps {
-        sh "kubectl rollout status deployment/${RELEASE} -n ${NAMESPACE}"
+        sh 'kubectl rollout status deployment/${RELEASE} -n ${NAMESPACE}'
       }
     }
-
   }
 }
+
