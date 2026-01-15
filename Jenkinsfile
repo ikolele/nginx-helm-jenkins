@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        KUBECONFIG = "/home/jenkins/.kube/config"
+        KUBECONFIG = "/var/jenkins_home/.kube/config"
     }
 
     stages {
