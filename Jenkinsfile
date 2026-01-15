@@ -17,7 +17,7 @@ pipeline {
             steps {
                 sh '''
                     kubectl config get-contexts
-                    kubectl config use-context dev
+                    kubectl config use-context kind-dev
 
                     helm upgrade --install nginx charts \
                       --set image.repository=nginx-demo \
@@ -28,5 +28,3 @@ pipeline {
         }
     }
 }
-
-
