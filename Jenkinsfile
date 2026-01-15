@@ -33,16 +33,6 @@ pipeline {
         sh "kubectl rollout status deployment/${RELEASE} -n ${NAMESPACE}"
       }
     }
-  }
 
-  post {
-    failure {
-      sh """
-      if helm status ${RELEASE} >/dev/null 2>&1; then
-        helm rollback ${RELEASE}
-      else
-        echo "No Helm release to roll back"
-      fi
-    """
   }
 }
