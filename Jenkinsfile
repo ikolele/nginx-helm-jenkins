@@ -6,7 +6,7 @@ pipeline {
         IMAGE_NAME   = "nginx-demo"
         CLUSTER_NAME = "dev"
         RELEASE_NAME = "nginx"
-        CHART_PATH  = "devops/helm/charts"
+        CHART_PATH  = "charts"
     }
 
     stages {
