@@ -2,17 +2,26 @@ pipeline {
     agent any
 
     environment {
-        KUBECONFIG = "/var/jenkins_home/.kube/config"
-        IMAGE_NAME = "nginx-demo"
-        IMAGE_TAG  = "${BUILD_NUMBER}"
+        KUBECONFIG   = "/var/jenkins_home/.kube/config"
+        IMAGE_NAME   = "nginx-demo"
+        CLUSTER_NAME = "dev"
+        RELEASE_NAME = "nginx"
+        CHART_PATH  = "devops/helm/charts"
     }
 
     stages {
 
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 sh '''
-                  docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                  set -e
+                  docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} .
                 '''
             }
         }
@@ -20,7 +29,8 @@ pipeline {
         stage('Load Image into kind') {
             steps {
                 sh '''
-                  kind load docker-image ${IMAGE_NAME}:${IMAGE_TAG} --name dev
+                  set -e
+                  kind load docker-image ${IMAGE_NAME}:${BUILD_NUMBER} --name ${CLUSTER_NAME}
                 '''
             }
         }
@@ -28,14 +38,24 @@ pipeline {
         stage('Deploy with Helm') {
             steps {
                 sh '''
-                    kubectl config use-context kind-dev
-
-                    helm upgrade --install nginx charts \
-                      --set image.repository=${IMAGE_NAME} \
-                      --set image.tag=${IMAGE_TAG} \
-                      --namespace default
+                  set -e
+                  helm upgrade --install ${RELEASE_NAME} ${CHART_PATH} \
+                    --set image.repository=${IMAGE_NAME} \
+                    --set image.tag=${BUILD_NUMBER}
                 '''
             }
         }
+
+        stage('Verify Deployment Rollout') {
+            steps {
+                sh '''
+                  set -e
+                  kubectl rollout status deployment/${RELEASE_NAME} --timeout=60s
+                  kubectl get pods -l app=${RELEASE_NAME}
+                '''
+            }
+        }
+
     }
 }
+
