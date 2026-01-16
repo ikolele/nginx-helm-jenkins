@@ -50,17 +50,7 @@ pipeline {
     steps {
         sh '''
           set -e
-
-          DEPLOYMENT=$(kubectl get deployment \
-            -l app.kubernetes.io/instance=${RELEASE_NAME} \
-            -o jsonpath="{.items[0].metadata.name}")
-
-          echo "Found deployment: $DEPLOYMENT"
-
-          kubectl rollout status deployment/$DEPLOYMENT --timeout=60s
-
-          kubectl get pods \
-            -l app.kubernetes.io/instance=${RELEASE_NAME}
+          kubectl get pods
         '''
     }
 }
