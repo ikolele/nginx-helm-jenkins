@@ -46,14 +46,13 @@ pipeline {
             }
         }
 
-        stage('Verify Deployment') {
+        stage('Verify Kubernetes State') {
             steps {
                 sh '''
-                  set -e
                   kubectl get pods
+                  kubectl get svc
                 '''
             }
         }
-
     }
 }
