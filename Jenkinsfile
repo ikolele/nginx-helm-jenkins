@@ -6,7 +6,7 @@ pipeline {
         IMAGE_NAME   = "nginx-demo"
         CLUSTER_NAME = "dev"
         RELEASE_NAME = "nginx"
-        CHART_PATH  = "charts"
+        CHART_PATH   = "charts"
     }
 
     stages {
@@ -46,11 +46,14 @@ pipeline {
             }
         }
 
-        stage('Verify Deployment Rollout') {
-    steps {
-        sh '''
-          set -e
-          kubectl get pods
-        '''
+        stage('Verify Deployment') {
+            steps {
+                sh '''
+                  set -e
+                  kubectl get pods
+                '''
+            }
+        }
+
     }
 }
