@@ -57,7 +57,7 @@ pipeline {
         stage('Wait for Rollout') {
             steps {
                 sh '''
-                  kubectl rollout status deployment/${RELEASE_NAME}
+                  kubectl rollout status deployment -l app.kubernetes.io/instance=${RELEASE_NAME}
                 '''
             }
 
