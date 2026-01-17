@@ -37,13 +37,13 @@ pipeline {
 
         stage('Deploy with Helm') {
             steps {
-                sh '''
+                 sh '''
                   set -e
                   helm upgrade --install ${RELEASE_NAME} ${CHART_PATH} \
                     --set image.repository=${IMAGE_NAME} \
                     --set image.tag=${BUILD_NUMBER}
                 '''
-            }
+           }
         }
 
         stage('Verify Kubernetes State') {
@@ -53,6 +53,14 @@ pipeline {
                   kubectl get svc
                 '''
             }
+        }
+        stage('Wait for Rollout') {
+            steps {
+                sh '''
+                  kubectl rollout status deployment/${RELEASE_NAME}
+                '''
+            }
+
         }
     }
 }
