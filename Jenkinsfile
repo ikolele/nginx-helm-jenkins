@@ -11,16 +11,7 @@ pipeline {
 
     stages {
 
-        stage('Test AWS Auth') {
-            steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'aws-ecr-creds'
-                ]]) {
-                    sh 'aws sts get-caller-identity'
-                }
-            }
-        }
+        
 
         stage('Checkout') {
             steps {
