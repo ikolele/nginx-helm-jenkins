@@ -11,6 +11,17 @@ pipeline {
 
     stages {
 
+        stage('Test AWS Auth') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-ecr-creds'
+                ]]) {
+                    sh 'aws sts get-caller-identity'
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -21,7 +32,6 @@ pipeline {
             steps {
                 sh '''
                   set -e
-                  echo "Building Docker image..."
                   docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} .
                 '''
             }
@@ -31,27 +41,15 @@ pipeline {
             steps {
                 sh '''
                   set -e
-                  echo "Loading image into kind cluster..."
                   kind load docker-image ${IMAGE_NAME}:${BUILD_NUMBER} --name ${CLUSTER_NAME}
                 '''
             }
         }
 
-        stage('Helm Lint') {
+        stage('Helm Deploy') {
             steps {
                 sh '''
                   set -e
-                  echo "Linting Helm chart..."
-                  helm lint ${CHART_PATH}
-                '''
-            }
-        }
-
-        stage('Deploy with Helm') {
-            steps {
-                sh '''
-                  set -e
-                  echo "Deploying application with Helm..."
                   helm upgrade --install ${RELEASE_NAME} ${CHART_PATH} \
                     --set image.repository=${IMAGE_NAME} \
                     --set image.tag=${BUILD_NUMBER}
@@ -59,23 +57,9 @@ pipeline {
             }
         }
 
-        stage('Verify Kubernetes Resources') {
-            steps {
-                sh '''
-                  echo "Checking pods..."
-                  kubectl get pods -o wide
-
-                  echo "Checking services..."
-                  kubectl get svc
-                '''
-            }
-        }
-
         stage('Wait for Rollout') {
             steps {
                 sh '''
-                  set -e
-                  echo "Waiting for deployment rollout..."
                   kubectl rollout status deployment \
                     -l app.kubernetes.io/instance=${RELEASE_NAME} \
                     --timeout=120s
@@ -85,19 +69,9 @@ pipeline {
     }
 
     post {
-        success {
-            echo "Deployment completed successfully 🎉"
-        }
-
         failure {
-            echo "Deployment failed ❌ – rolling back Helm release"
-            sh '''
-              helm rollback ${RELEASE_NAME} || true
-            '''
-        }
-
-        always {
-            echo "Pipeline finished."
+            echo "Pipeline failed – rolling back"
+            sh 'helm rollback ${RELEASE_NAME} || true'
         }
     }
 }
